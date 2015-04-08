@@ -1,0 +1,5 @@
+wpan-tools (0.4+git20150627-1) experimental; urgency=low
+
+  * Initial release (Closes: #782139)
+
+ -- Guido Günther <agx@sigxcpu.org>  Wed, 08 Apr 2015 11:17:13 +0200
