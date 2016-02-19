@@ -17,7 +17,13 @@ Section: libdevel
 Architecture: any
 Depends: ${shlibs:Depends},
  ${misc:Depends},
-Description: Configure 802.15.4 devices.
- This package contains the iwpan tool to configure 802.15.4 devices via the
- netlink interface. Once configured these devices can e.g. be used to build a
- 6LoWPAN network.
+Description: Configure and test 802.15.4 devices
+ This package contains two CLI tools for working with devices based on IEEE
+ 802.15.4 via the netlink interface.
+ IEEE 802.15.4 describes the standards for Low-Rate Wireless Personal Area
+ Networks (6LoWPAN).
+ .
+ * iwpan - configure a wpan network device to create a 6LoWPAN network
+ .
+ * wpan-ping - network testing tool like ping or ping6, especially for
+               6LoWPAN nodes
