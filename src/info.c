@@ -148,8 +148,8 @@ static void print_freq_handler(int channel_page, int channel)
 
 static char cca_mode_buf[100];
 
-const char *print_cca_mode_handler(enum nl802154_cca_modes cca_mode,
-				   enum nl802154_cca_opts cca_opt)
+static const char *print_cca_mode_handler(enum nl802154_cca_modes cca_mode,
+					  enum nl802154_cca_opts cca_opt)
 {
 	switch (cca_mode) {
 	case NL802154_CCA_ENERGY:
@@ -212,11 +212,12 @@ static const char *commands[NL802154_CMD_MAX + 1] = {
 	[NL802154_CMD_SET_BACKOFF_EXPONENT] = "set_backoff_exponent",
 	[NL802154_CMD_SET_MAX_CSMA_BACKOFFS] = "set_max_csma_backoffs",
 	[NL802154_CMD_SET_LBT_MODE] = "set_lbt_mode",
+	[NL802154_CMD_SET_ACKREQ_DEFAULT] = "set_ackreq_default",
 };
 
 static char cmdbuf[100];
 
-const char *command_name(enum nl802154_commands cmd)
+static const char *command_name(enum nl802154_commands cmd)
 {
 	if (cmd <= NL802154_CMD_MAX && commands[cmd])
 		return commands[cmd];

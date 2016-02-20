@@ -49,6 +49,8 @@
 /* Set the dispatch header to not 6lowpan for compat */
 #define NOT_A_6LOWPAN_FRAME 0x00
 
+#define DEBUG 0
+
 enum {
 	IEEE802154_ADDR_NONE = 0x0,
 	IEEE802154_ADDR_SHORT = 0x2,
@@ -69,7 +71,7 @@ struct sockaddr_ieee802154 {
 	struct ieee802154_addr_sa addr;
 };
 
-#ifdef HAVE_GETOPT_LONG
+#ifdef _GNU_SOURCE
 static const struct option perf_long_opts[] = {
 	{ "daemon", no_argument, NULL, 'd' },
 	{ "address", required_argument, NULL, 'a' },
@@ -97,7 +99,7 @@ struct config {
 
 extern char *optarg;
 
-void usage(const char *name) {
+static void usage(const char *name) {
 	printf("Usage: %s OPTIONS\n"
 	"OPTIONS:\n"
 	"--daemon |-d\n"
@@ -107,7 +109,7 @@ void usage(const char *name) {
 	"--size | -s packet length\n"
 	"--interface | -i listen on this interface (default wpan0)\n"
 	"--version | -v print out version\n"
-	"--help This usage text\n", name);
+	"--help | -h this usage text\n", name);
 }
 
 static int nl802154_init(struct config *conf)
@@ -151,7 +153,6 @@ static void nl802154_cleanup(struct config *conf)
 static int nl_msg_cb(struct nl_msg* msg, void* arg)
 {
 	struct config *conf = arg;
-	struct sockaddr_nl nla;
 	struct nlmsghdr *nlh = nlmsg_hdr(msg);
 	struct nlattr *attrs[NL802154_ATTR_MAX+1];
 	uint64_t temp;
@@ -196,6 +197,7 @@ static int get_interface_info(struct config *conf) {
 	return 0;
 }
 
+#if DEBUG
 static void dump_packet(unsigned char *buf, int len) {
 	int i;
 
@@ -205,6 +207,7 @@ static void dump_packet(unsigned char *buf, int len) {
 	}
 	printf("\n");
 }
+#endif
 
 static int generate_packet(unsigned char *buf, struct config *conf, unsigned int seq_num) {
 	int i;
@@ -255,7 +258,10 @@ static int measure_roundtrip(struct config *conf, int sd) {
 	/* 500ms seconds packet receive timeout */
 	timeout.tv_sec = 0;
 	timeout.tv_usec = 500000;
-	setsockopt(sd, SOL_SOCKET, SO_RCVTIMEO, (struct timeval *)&timeout,sizeof(struct timeval));
+	ret = setsockopt(sd, SOL_SOCKET, SO_RCVTIMEO, (struct timeval *)&timeout,sizeof(struct timeval));
+	if (ret < 0) {
+		perror("setsockopt receive timeout");
+	}
 
 	count = 0;
 	for (i = 0; i < conf->packets; i++) {
@@ -327,7 +333,7 @@ static int measure_roundtrip(struct config *conf, int sd) {
 	return 0;
 }
 
-static void init_server(struct config *conf, int sd) {
+static void init_server(int sd) {
 	ssize_t len;
 	unsigned char *buf;
 	struct sockaddr_ieee802154 src;
@@ -343,12 +349,16 @@ static void init_server(struct config *conf, int sd) {
 		len = recvfrom(sd, buf, MAX_PAYLOAD_LEN, 0, (struct sockaddr *)&src, &addrlen);
 		if (len < 0) {
 			perror("recvfrom");
+			continue;
 		}
-		//dump_packet(buf, len);
+#if DEBUG
+		dump_packet(buf, len);
+#endif
 		/* Send same packet back */
 		len = sendto(sd, buf, len, 0, (struct sockaddr *)&src, addrlen);
 		if (len < 0) {
 			perror("sendto");
+			continue;
 		}
 	}
 	free(buf);
@@ -368,11 +378,12 @@ static int init_network(struct config *conf) {
 	ret = bind(sd, (struct sockaddr *)&conf->src, sizeof(conf->src));
 	if (ret) {
 		perror("bind");
+		close(sd);
 		return 1;
 	}
 
 	if (conf->server)
-		init_server(conf, sd);
+		init_server(sd);
 	else
 		measure_roundtrip(conf, sd);
 
@@ -384,6 +395,9 @@ static int init_network(struct config *conf) {
 static int parse_dst_addr(struct config *conf, char *arg)
 {
 	int i;
+
+	if (!arg)
+		return -1;
 
 	/* PAN ID is filled from netlink in get_interface_info */
 	conf->dst.family = AF_IEEE802154;
@@ -422,7 +436,7 @@ static int parse_dst_addr(struct config *conf, char *arg)
 int main(int argc, char *argv[]) {
 	int c, ret;
 	struct config *conf;
-	char *dst_addr;
+	char *dst_addr = NULL;
 
 	conf = malloc(sizeof(struct config));
 
@@ -441,11 +455,11 @@ int main(int argc, char *argv[]) {
 	}
 
 	while (1) {
-#ifdef HAVE_GETOPT_LONG
+#ifdef _GNU_SOURCE
 		int opt_idx = -1;
-		c = getopt_long(argc, argv, "b:a:ec:s:i:dvh", perf_long_opts, &opt_idx);
+		c = getopt_long(argc, argv, "a:ec:s:i:dvh", perf_long_opts, &opt_idx);
 #else
-		c = getopt(argc, argv, "b:a:ec:s:i:dvh");
+		c = getopt(argc, argv, "a:ec:s:i:dvh");
 #endif
 		if (c == -1)
 			break;
@@ -467,6 +481,7 @@ int main(int argc, char *argv[]) {
 			if (conf->packet_len >= MAX_PAYLOAD_LEN || conf->packet_len < MIN_PAYLOAD_LEN) {
 				printf("Packet size must be between %i and %i.\n",
 				       MIN_PAYLOAD_LEN, MAX_PAYLOAD_LEN - 1);
+				free(conf);
 				return 1;
 			}
 			break;
@@ -474,13 +489,16 @@ int main(int argc, char *argv[]) {
 			conf->interface = optarg;
 			break;
 		case 'v':
-			fprintf(stdout, "wpan-ping 0.1\n");
+			fprintf(stdout, "wpan-ping " PACKAGE_VERSION "\n");
+			free(conf);
 			return 1;
 		case 'h':
 			usage(argv[0]);
+			free(conf);
 			return 1;
 		default:
 			usage(argv[0]);
+			free(conf);
 			return 1;
 		}
 	}
