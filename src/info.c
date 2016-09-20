@@ -372,22 +372,36 @@ static int print_phy_handler(struct nl_msg *msg, void *arg)
 
 		if (tb_caps[NL802154_CAP_ATTR_TX_POWERS]) {
 			int rem_pwrs;
+			int counter = 0;
 			struct nlattr *nl_pwrs;
 
 			printf("\ttx_powers: ");
-			nla_for_each_nested(nl_pwrs, tb_caps[NL802154_CAP_ATTR_TX_POWERS], rem_pwrs)
-				printf("%.3g,", MBM_TO_DBM(nla_get_s32(nl_pwrs)));
+			nla_for_each_nested(nl_pwrs, tb_caps[NL802154_CAP_ATTR_TX_POWERS], rem_pwrs) {
+				if (counter % 6 == 0) {
+					printf("\n\t\t\t%.3g dBm, ", MBM_TO_DBM(nla_get_s32(nl_pwrs)));
+				} else {
+					printf("%.3g dBm, ", MBM_TO_DBM(nla_get_s32(nl_pwrs)));
+				}
+				counter++;
+			}
 			/* TODO */
 			printf("\b \n");
 		}
 
 		if (tb_caps[NL802154_CAP_ATTR_CCA_ED_LEVELS]) {
 			int rem_levels;
+			int counter = 0;
 			struct nlattr *nl_levels;
 
 			printf("\tcca_ed_levels: ");
-			nla_for_each_nested(nl_levels, tb_caps[NL802154_CAP_ATTR_CCA_ED_LEVELS], rem_levels)
-				printf("%.3g,", MBM_TO_DBM(nla_get_s32(nl_levels)));
+			nla_for_each_nested(nl_levels, tb_caps[NL802154_CAP_ATTR_CCA_ED_LEVELS], rem_levels) {
+				if (counter % 6 == 0) {
+					printf("\n\t\t\t%.3g dBm, ", MBM_TO_DBM(nla_get_s32(nl_levels)));
+				} else {
+					printf("%.3g dBm, ", MBM_TO_DBM(nla_get_s32(nl_levels)));
+				}
+				counter++;
+			}
 			/* TODO */
 			printf("\b \n");
 		}
@@ -467,21 +481,11 @@ static int print_phy_handler(struct nl_msg *msg, void *arg)
 				printf("false,true\n");
 				break;
 			default:
-				printf("unkown\n");
+				printf("unknown\n");
 				break;
 			}
 		}
 	}
-
-	if (tb_msg[NL802154_ATTR_SUPPORTED_COMMANDS]) {
-		struct nlattr *nl_cmd;
-		int rem_cmd;
-
-		printf("Supported commands:\n");
-		nla_for_each_nested(nl_cmd, tb_msg[NL802154_ATTR_SUPPORTED_COMMANDS], rem_cmd)
-			printf("\t* %s\n", command_name(nla_get_u32(nl_cmd)));
-	}
-
 	return 0;
 }
 
