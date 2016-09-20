@@ -13,7 +13,7 @@ Section: libs
 Homepage: http://wpan.cakelab.org/
 
 Package: wpan-tools
-Section: libdevel
+Section: net
 Architecture: any
 Depends: ${shlibs:Depends},
  ${misc:Depends},
