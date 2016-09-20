@@ -1,3 +1,16 @@
+wpan-tools (0.7-1) unstable; urgency=medium
+
+  [ Carsten Schoenert ]
+  * [83b36b6] lintian: fixup description-synopsis-might-not-be-phrased-properly.
+    Rewrite the package description due additional new package contents.
+
+  [ Guido Günther ]
+  * New upstream version 0.7
+  * [0b7dd2c] Add wpan-ping docs
+  * [0071129] gbp: Set upstream tag format so dch bumps versions automatically
+
+ -- Guido Günther <agx@sigxcpu.org>  Tue, 20 Sep 2016 13:20:58 +0200
+
 wpan-tools (0.5+git20160220-1) unstable; urgency=medium
 
   * Upload to unstable
