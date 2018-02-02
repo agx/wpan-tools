@@ -1,0 +1,28 @@
+From: =?utf-8?q?Guido_G=C3=BCnther?= <agx@sigxcpu.org>
+Date: Fri, 2 Feb 2018 12:22:23 +0100
+Subject: Don't install examples
+
+They're not supposed to end up in /usr/bin
+---
+ examples/Makefile.am | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/examples/Makefile.am b/examples/Makefile.am
+index 9759646..b475c1f 100644
+--- a/examples/Makefile.am
++++ b/examples/Makefile.am
+@@ -1,8 +1,8 @@
+-bin_PROGRAMS = af_ieee802154_tx \
+-	       af_ieee802154_rx \
+-	       af_packet_tx \
+-	       af_packet_rx \
+-	       af_inet6_tx \
+-	       af_inet6_rx
++noinst_PROGRAMS = af_ieee802154_tx \
++	          af_ieee802154_rx \
++	          af_packet_tx \
++	          af_packet_rx \
++	          af_inet6_tx \
++	          af_inet6_rx
+ 
+ EXTRA_DIST = README.examples
