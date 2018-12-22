@@ -1,6 +1,6 @@
 AC_PREREQ(2.60)
 AC_INIT([Userspace tools for Linux IEEE 802.15.4 stack],
-	[0.8], [linux-wpan@vger.kernel.org], [wpan-tools],
+	[0.9], [linux-wpan@vger.kernel.org], [wpan-tools],
 	[https://github.com/linux-wpan/wpan-tools])
 AC_CONFIG_SRCDIR([src/iwpan.c])
 AC_CONFIG_AUX_DIR([build-aux])
@@ -56,6 +56,7 @@ AC_CONFIG_FILES([
         Makefile
 	src/Makefile
 	wpan-ping/Makefile
+	wpan-hwsim/Makefile
 	examples/Makefile
 ])
 
